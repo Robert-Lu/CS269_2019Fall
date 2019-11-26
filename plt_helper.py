@@ -242,3 +242,96 @@ def show_sdf_and_2_zls(im, phi, phi2, cmap=parula_cmap(), vmin=None, vmax=None,
     else:
         plt.show(block=block and ENABLE_BLOCK)
     return f
+
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+
+def show_chan_vese(im, phi, cmap=parula_cmap(), vmin=None, vmax=None,
+                     levels=None, zls_color=None, title=None, no_colorbar=True,
+                     block=False, fig_handle=None, force_amend=False, not_show=False):
+    """
+    :param vmin: range of the colormap
+    :param vmax: range of the colormap
+    :param levels: used for zero level set (contour)
+    :param zls_color: used for zero level set (contour)
+    :param block: when show, use block=block
+    :param fig_handle: if given and block=False, enable amend mode
+    :param force_amend: force to enable amend mode
+    :param not_show: do not show or draw, return handle only
+
+    Note:
+        * Amend mode means using the previous figure and draw on it.
+        * By default, amend <=> not block & fig_handle is not None.
+        * If fig_handle not given but force_amend triggered, not considered.
+    """
+
+    if not ENABLE_PLOT:
+        return
+
+    if zls_color is None:
+        zls_color = [0, 0, 0]
+    if levels is None:
+        levels = [0]
+    if cmap == "parula":
+        cmap = parula_cmap()
+
+    zls_cmap = zls_color
+    if len(levels) == 1:
+        zls_cmap = single_color_cmap(zls_color)
+
+    amend_mode = False
+    if fig_handle is None:
+        f = plt.figure(figsize=grid_figure_size(2, 2))
+    else:
+        f = fig_handle
+        amend_mode = not block
+        f.clear()
+    if (force_amend):
+        amend_mode = True
+
+    if not_show:
+        return f
+
+    if title is not None:
+        f.suptitle(title, fontsize=25)
+
+    f.add_subplot(2, 2, 1)
+    _im = plt.imshow(im, cmap=cmap, vmin=0, vmax=1)
+
+    if not no_colorbar:
+        plt.colorbar(_im)
+    _c = plt.contour(phi, levels=levels, cmap=zls_cmap, linewidths=4)
+
+    f.add_subplot(2, 2, 2)
+    _im = plt.imshow(phi, cmap=parula_cmap())
+        
+    ax = f.add_subplot(2, 2, 3, projection='3d')
+    # 
+    size = phi.shape
+    X = np.arange(0, phi.shape[1], 1)
+    Y = np.arange(0, phi.shape[0], 1)
+    X, Y = np.meshgrid(X, Y)
+    Z = phi
+    surf = ax.contour(X, Y, Z, cmap=parula_cmap(), antialiased=False)
+    ax.plot_surface(X, Y, Z, cmap=parula_cmap(), rstride=10, cstride=10, alpha=0.3)
+    ax.invert_zaxis()
+    ax.set_zlim(-50, 100)
+    # 
+
+    eps = np.finfo(float).eps
+    f.add_subplot(2, 2, 4)
+    interior_area = np.flatnonzero(phi <= 0) # interior points
+    exterior_area = np.flatnonzero(phi > 0)  # exterior points
+    c_in  = np.sum(im.flat[interior_area]) / (len(interior_area) + eps)  # interior mean
+    c_out = np.sum(im.flat[exterior_area]) / (len(exterior_area) + eps)  # exterior mean
+    cvim = np.zeros(phi.shape)
+    cvim[phi >  0] = c_out
+    cvim[phi <= 0] = c_in
+    _im = plt.imshow(cvim, cmap="gray", vmin=0, vmax=1)
+
+    if amend_mode:
+        plt.draw()
+        plt.pause(0.001)
+    else:
+        plt.show(block=block and ENABLE_BLOCK)
+    return f

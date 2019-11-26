@@ -65,14 +65,15 @@ class ChanVeseModel(object):
         self.iter_num += 1;
 
 
-    def draw(self, block=False):
+    def draw(self, block=False, save=None):
         title = "Iteration %d" % self.iter_num
         if self.fig is None:
-            self.fig = show_sdf_and_zls(self.img, self.phi, title=title, block=block, cmap="gray", zls_color=[1,0,0])
-            self.fig = show_sdf_and_zls(self.img, self.phi, fig_handle=self.fig, title=title, block=block, cmap="gray", zls_color=[1,0,0])
+            # self.fig = show_chan_vese(self.img, self.phi, title=title, block=block, cmap="gray", zls_color=[1,0,0])
+            self.fig = show_chan_vese(self.img, self.phi, fig_handle=None, title=title, block=block, cmap="gray", zls_color=[1,0,0])
         else:
-            self.fig = show_sdf_and_zls(self.img, self.phi, fig_handle=self.fig, title=title, block=block, cmap="gray", zls_color=[1,0,0])
-        plt.savefig('./images/foo%3d.png' % self.iter_num)
+            self.fig = show_chan_vese(self.img, self.phi, fig_handle=self.fig, title=title, block=block, cmap="gray", zls_color=[1,0,0])
+        if save is not None:
+            plt.savefig('./images/%s%4d.png' % (save, self.iter_num))
 
     def done(self):
         if self.iter_num >= self.max_iter:
@@ -87,6 +88,7 @@ class ChanVeseModel(object):
 
 
 # Helpers
+# some code are from https://github.com/kevin-keraudren/chanvese
 
 # Compute curvature along SDF
 def get_curvature(phi, idx):
@@ -174,8 +176,12 @@ def sussman(D, dt):
             ([a_n.flat[D_neg_ind]**2], [b_p.flat[D_neg_ind]**2])), axis=0) +
         np.max(np.concatenate(
             ([c_n.flat[D_neg_ind]**2], [d_p.flat[D_neg_ind]**2])), axis=0)) - 1
+    dD[ 0,:] = 0
+    dD[-1,:] = 0
+    dD[:, 0] = 0
+    dD[:,-1] = 0
 
-    D = D - dt * sussman_sign(D) * dD
+    D -= dt * sussman_sign(D) * dD
     return D
 
 

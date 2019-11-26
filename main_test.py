@@ -14,8 +14,18 @@ def main():
     print("Test")
 
     # import image
+    save = "example42"
+    save = None
     img = plt.imread("./example3.jpg")
-    # img = imresize(img, (125, 125))
+
+    size = img.shape
+    if size[0] > 250:
+        h = size[0]
+        w = size[1]
+        while max(h, w) > 250:
+            h = h // 2
+            w = w // 2
+        img = imresize(img, (h, w))
 
     # convert to grayscale if image has 3rd rank (RGBA channels)
     if len(img.shape) == 3:
@@ -38,11 +48,12 @@ def main():
     # create a Chan-Vese Model
     model = ChanVeseModel(img, mask, check_same_every_n_iter=50)
     i = 0
-    model.draw()
+    model.draw(save=save)
+    model.draw(save=save)
     while not model.done():
-        model.iterate(_lambda1=1, _lambda2=1, _mu=.5, _nu=.1, _dt=.5)
+        model.iterate(_lambda1=1, _lambda2=1, _mu=.1, _nu=.02, _dt=.5)
         if i % 10 == 9:
-            model.draw()
+            model.draw(save=save)
         i += 1
     model.draw(block=True)
 

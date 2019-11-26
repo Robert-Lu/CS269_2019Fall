@@ -87,7 +87,7 @@ def create_shape_on_image(data, max_shape_num = 1):
     ax = fig.add_subplot(111)
     ax.set_title(
         'Please click draw a shape (10 pixel precision to close the shape)')
-    line = ax.imshow(data, cmap="gray")
+    line = ax.imshow(data, cmap="gray", vmin=0, vmax=1)
     ax.set_xlim(0, data.shape[1])
     ax.set_ylim(0, data.shape[0])
     linebuilder = LineBuilder(line, ax, fig, 'red', max_shape_num=1)
@@ -122,7 +122,8 @@ def rgb2gray(rgb):
     """
         From: 
         https://stackoverflow.com/questions/12201577/how-can-i-convert-an-rgb-image-into-grayscale-in-python
+        Altered
     """
     r, g, b = rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]
-    gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+    gray = 0.333 * r + 0.333 * g + 0.333 * b
     return gray
